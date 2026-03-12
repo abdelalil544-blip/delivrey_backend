@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/clients")
@@ -36,6 +37,14 @@ public class ClientExpediteurController {
     }
 
     // --------------------- READ -----------------------
+    @Operation(summary = "Obtenir le profil du client connecté")
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<ClientExpediteurDTO> getMe(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(clientService.getByEmail(email));
+    }
+
     @Operation(summary = "Obtenir un client par ID")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENT','ADMIN')")

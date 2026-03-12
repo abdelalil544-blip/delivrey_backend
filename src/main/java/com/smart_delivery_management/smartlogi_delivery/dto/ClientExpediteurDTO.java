@@ -32,4 +32,6 @@ public class ClientExpediteurDTO {
 
     @NotBlank(message = "L'adresse est obligatoire")
     private String adresse;
+
+    private String entreprise;
 }

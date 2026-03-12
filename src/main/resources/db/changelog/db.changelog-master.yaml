@@ -19,3 +19,5 @@ databaseChangeLog:
       file: db/changelog/changes/008-create-historique-livraison.yaml
   - include:
       file: db/changelog/changes/009-add-oauth-columns.yaml
+  - include:
+      file: db/changelog/changes/010-add-entreprise-to-client-expediteur.yaml

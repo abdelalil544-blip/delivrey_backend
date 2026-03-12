@@ -34,6 +34,7 @@ public class ColisServiceImpl implements ColisService {
     private final ZoneRepository zoneRepository;
     private final LivreurRepository livreurRepository;
     private final HistoriqueLivraisonRepository historiqueRepository;
+    private final ProduitRepository produitRepository;
     private final ColisMapper colisMapper;
 
     @Override
@@ -52,6 +53,24 @@ public class ColisServiceImpl implements ColisService {
         colis.setZone(zone);
 
         Colis savedColis = colisRepository.save(colis);
+
+        if (createDTO.getProduits() != null && !createDTO.getProduits().isEmpty()) {
+            List<ColisProduit> products = createDTO.getProduits().stream().map(pDto -> {
+                Produit p = produitRepository.findById(pDto.getProduitId())
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("Produit introuvable: " + pDto.getProduitId()));
+                ColisProduit cp = new ColisProduit();
+                cp.setId(new ColisProduitId(savedColis.getId(), p.getId()));
+                cp.setColis(savedColis);
+                cp.setProduit(p);
+                cp.setQuantite(pDto.getQuantite());
+                cp.setPrix(pDto.getPrix());
+                return cp;
+            }).collect(Collectors.toList());
+            savedColis.getProduits().addAll(products);
+            colisRepository.save(savedColis);
+        }
+
         addHistorique(savedColis, StatutColis.CREE, "Colis créé");
 
         log.info("Colis créé avec succès, ID: {}", savedColis.getId());
@@ -87,7 +106,8 @@ public class ColisServiceImpl implements ColisService {
 
     @Override
     public void deleteColis(String id) {
-        if (!colisRepository.existsById(id)) throw new ResourceNotFoundException("Colis introuvable");
+        if (!colisRepository.existsById(id))
+            throw new ResourceNotFoundException("Colis introuvable");
         colisRepository.deleteById(id);
     }
 
@@ -136,9 +156,11 @@ public class ColisServiceImpl implements ColisService {
         if (criteria.getLivreurId() != null)
             spec = spec.and((root, query, cb) -> cb.equal(root.get("livreur").get("id"), criteria.getLivreurId()));
         if (criteria.getClientExpediteurId() != null)
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("clientExpediteur").get("id"), criteria.getClientExpediteurId()));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("clientExpediteur").get("id"),
+                    criteria.getClientExpediteurId()));
         if (criteria.getDateDebut() != null)
-            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("dateCreation"), criteria.getDateDebut()));
+            spec = spec.and(
+                    (root, query, cb) -> cb.greaterThanOrEqualTo(root.get("dateCreation"), criteria.getDateDebut()));
         if (criteria.getDateFin() != null)
             spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("dateCreation"), criteria.getDateFin()));
 
@@ -160,7 +182,8 @@ public class ColisServiceImpl implements ColisService {
     @Override
     @Transactional(readOnly = true)
     public List<ColisDTO> getColisByDestinataire(String destinataireId) {
-        return colisRepository.findByDestinataireId(destinataireId).stream().map(colisMapper::toDto).collect(Collectors.toList());
+        return colisRepository.findByDestinataireId(destinataireId).stream().map(colisMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -176,10 +199,8 @@ public class ColisServiceImpl implements ColisService {
                         h.getId(),
                         h.getStatut(),
                         h.getDateChangement(),
-                        h.getCommentaire()
-                ));
+                        h.getCommentaire()));
     }
-
 
     @Override
     @Transactional(readOnly = true)
@@ -195,8 +216,7 @@ public class ColisServiceImpl implements ColisService {
                 livreur.getNom() + " " + livreur.getPrenom(),
                 null, null,
                 count != null ? count : 0L,
-                poids != null ? poids : BigDecimal.ZERO
-        );
+                poids != null ? poids : BigDecimal.ZERO);
     }
 
     @Override
@@ -212,21 +232,22 @@ public class ColisServiceImpl implements ColisService {
                 null, null,
                 zone.getId(), zone.getNom(),
                 count != null ? count : 0L,
-                poids != null ? poids : BigDecimal.ZERO
-        );
+                poids != null ? poids : BigDecimal.ZERO);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ColisDTO> getColisEnRetard() {
         LocalDateTime limitDate = LocalDateTime.now().minusDays(3);
-        return colisRepository.findColisEnRetard(limitDate).stream().map(colisMapper::toDto).collect(Collectors.toList());
+        return colisRepository.findColisEnRetard(limitDate).stream().map(colisMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ColisDTO> getColisPrioritairesNonAssignes() {
-        return colisRepository.findColisPrioritairesNonAssignes().stream().map(colisMapper::toDto).collect(Collectors.toList());
+        return colisRepository.findColisPrioritairesNonAssignes().stream().map(colisMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -297,12 +318,33 @@ public class ColisServiceImpl implements ColisService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<ColisDTO> getColisByClientEmail(String email, Pageable pageable) {
+        ClientExpediteur client = clientRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Client introuvable"));
+
+        return colisRepository
+                .findByClientExpediteurId(client.getId(), pageable)
+                .map(colisMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ColisDTO> getColisByDestinataireEmail(String email, Pageable pageable) {
+        Destinataire dest = destinataireRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Destinataire introuvable"));
+
+        return colisRepository
+                .findByDestinataireId(dest.getId(), pageable)
+                .map(colisMapper::toDto);
+    }
+
+    @Override
     public ColisDTO updateStatutByLivreur(
             String colisId,
             StatutColis statut,
             String commentaire,
-            String emailLivreur
-    ) throws AccessDeniedException {
+            String emailLivreur) throws AccessDeniedException {
         Colis colis = colisRepository.findById(colisId)
                 .orElseThrow(() -> new ResourceNotFoundException("Colis introuvable"));
 
@@ -322,6 +364,5 @@ public class ColisServiceImpl implements ColisService {
 
         return colisMapper.toDto(saved);
     }
-
 
 }

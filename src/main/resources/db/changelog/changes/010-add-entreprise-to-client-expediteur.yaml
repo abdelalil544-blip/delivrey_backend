@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-add-entreprise-to-client-expediteur
+      author: smartlogi
+      changes:
+        - addColumn:
+            tableName: client_expediteur
+            columns:
+              - column:
+                  name: entreprise
+                  type: varchar(255)

@@ -61,5 +61,10 @@ public interface ColisService {
 
     public Page<ColisDTO> getColisByLivreurEmail(String email, Pageable pageable);
 
-    public ColisDTO updateStatutByLivreur(String colisId, StatutColis statut, String commentaire, String emailLivreur) throws AccessDeniedException;
+    public Page<ColisDTO> getColisByClientEmail(String email, Pageable pageable);
+
+    public Page<ColisDTO> getColisByDestinataireEmail(String email, Pageable pageable);
+
+    public ColisDTO updateStatutByLivreur(String colisId, StatutColis statut, String commentaire, String emailLivreur)
+            throws AccessDeniedException;
 }

@@ -14,4 +14,5 @@ import org.hibernate.annotations.GenericGenerator;
 @EqualsAndHashCode(callSuper = true)
 @PrimaryKeyJoinColumn(name = "id")
 public class ClientExpediteur extends User {
+    private String entreprise;
 }

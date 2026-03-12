@@ -1,0 +1,47 @@
+    <div class="login-page">
+      <div class="login-card">
+        <div class="login-header">
+          <h1>Smart Delivery</h1>
+          <p>Connectez-vous pour accéder à votre espace.</p>
+        </div>
+
+        <form (ngSubmit)="submit()" class="login-form">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              [(ngModel)]="email"
+              name="email"
+              type="email"
+              placeholder="vous@example.com"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input
+              id="password"
+              [(ngModel)]="password"
+              name="password"
+              type="password"
+              placeholder="Votre mot de passe"
+              required
+            />
+          </div>
+
+          @if (errorMessage) {
+            <p class="error-message">{{ errorMessage }}</p>
+          }
+
+          <button type="submit" class="primary-button">
+            Se connecter
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <span>Pas encore de compte ?</span>
+          <a routerLink="/register">S'inscrire</a>
+        </div>
+      </div>
+    </div>

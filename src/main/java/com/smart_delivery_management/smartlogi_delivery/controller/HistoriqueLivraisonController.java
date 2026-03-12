@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -79,8 +80,7 @@ public class HistoriqueLivraisonController {
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<HistoriqueLivraison> result =
-                historiqueLivraisonService.findByColisIdOrderByDateDesc(colisId, pageable);
+        Page<HistoriqueLivraison> result = historiqueLivraisonService.findByColisIdOrderByDateDesc(colisId, pageable);
 
         List<HistoriqueLivraisonDTO> dtos = result.stream()
                 .map(this::mapToDTO)
@@ -99,8 +99,27 @@ public class HistoriqueLivraisonController {
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<HistoriqueLivraison> result =
-                historiqueLivraisonService.findByStatut(statut, pageable);
+        Page<HistoriqueLivraison> result = historiqueLivraisonService.findByStatut(statut, pageable);
+
+        List<HistoriqueLivraisonDTO> dtos = result.stream()
+                .map(this::mapToDTO)
+                .toList();
+
+        return ResponseEntity.ok(new PageImpl<>(dtos, pageable, result.getTotalElements()));
+    }
+
+    // ------------------- HISTORIQUES POUR CLIENT CONNECTÉ -------------------
+    @Operation(summary = "Récupérer l'historique personnel du client")
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<Page<HistoriqueLivraisonDTO>> getMyHistorique(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        String email = authentication.getName();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<HistoriqueLivraison> result = historiqueLivraisonService.findByClientEmail(email, pageable);
 
         List<HistoriqueLivraisonDTO> dtos = result.stream()
                 .map(this::mapToDTO)
@@ -129,7 +148,6 @@ public class HistoriqueLivraisonController {
                 historique.getId(),
                 historique.getStatut(),
                 historique.getDateChangement(),
-                historique.getCommentaire()
-        );
+                historique.getCommentaire());
     }
 }

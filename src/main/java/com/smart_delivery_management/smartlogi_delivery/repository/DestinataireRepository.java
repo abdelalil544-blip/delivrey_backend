@@ -8,6 +8,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DestinataireRepository extends JpaRepository<Destinataire, String> {
-    Page<Destinataire> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(String nom, String prenom, Pageable pageable);
+    Page<Destinataire> findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(String nom, String prenom,
+            Pageable pageable);
+
     Page<Destinataire> findByTelephone(String telephone, Pageable pageable);
+
+    java.util.Optional<Destinataire> findByEmail(String email);
 }

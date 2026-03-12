@@ -9,10 +9,18 @@ import java.util.Optional;
 
 public interface HistoriqueLivraisonService {
     HistoriqueLivraison save(HistoriqueLivraison historiqueLivraison);
+
     Optional<HistoriqueLivraison> findById(String id);
+
     Page<HistoriqueLivraison> findAll(Pageable pageable);
+
     Page<HistoriqueLivraison> findByColisIdOrderByDateDesc(String colisId, Pageable pageable);
+
     Page<HistoriqueLivraison> findByStatut(StatutColis statut, Pageable pageable);
+
+    Page<HistoriqueLivraison> findByClientEmail(String email, Pageable pageable);
+
     void deleteById(String id);
+
     boolean existsById(String id);
 }

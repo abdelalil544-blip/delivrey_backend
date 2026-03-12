@@ -42,16 +42,15 @@ public class AuthController {
 
         try {
             // 🔐 Authentification email / password
+            System.out.println("Login attempt for email: " + request.getEmail());
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
-                            request.getPassword()
-                    )
-            );
+                            request.getPassword()));
+            System.out.println("Authentication successful for: " + request.getEmail());
 
             // 👤 Charger l'utilisateur
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(request.getEmail());
+            UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
 
             // 🎟️ Génération du JWT
             String token = jwtUtil.generateToken(userDetails);

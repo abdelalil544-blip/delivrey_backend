@@ -12,6 +12,8 @@ public interface ClientExpediteurService {
 
     ClientExpediteurDTO getById(String id);
 
+    ClientExpediteurDTO getByEmail(String email);
+
     Page<ClientExpediteurDTO> getAll(Pageable pageable);
 
     ClientExpediteurDTO update(String id, ClientExpediteurDTO dto);

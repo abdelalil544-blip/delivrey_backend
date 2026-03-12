@@ -30,276 +30,288 @@ import java.util.List;
 @Tag(name = "Colis", description = "Endpoints pour la gestion et le suivi des colis")
 public class ColisController {
 
-    private final ColisService colisService;
+        private final ColisService colisService;
 
-    // ------------------- CREATE -------------------
-    @Operation(summary = "Créer un colis")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Colis créé avec succès"),
-            @ApiResponse(responseCode = "400", description = "Erreur de validation")
-    })
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ColisDTO> createColis(
-            @Valid @RequestBody ColisCreateDTO createDTO) {
+        // ------------------- CREATE -------------------
+        @Operation(summary = "Créer un colis")
+        @ApiResponses({
+                        @ApiResponse(responseCode = "201", description = "Colis créé avec succès"),
+                        @ApiResponse(responseCode = "400", description = "Erreur de validation")
+        })
+        @PostMapping
+        @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
+        public ResponseEntity<ColisDTO> createColis(
+                        @Valid @RequestBody ColisCreateDTO createDTO) {
 
-        log.info("CREATE colis - client={}", createDTO.getClientExpediteurId());
-        return new ResponseEntity<>(
-                colisService.createColis(createDTO),
-                HttpStatus.CREATED
-        );
-    }
+                log.info("CREATE colis - client={}", createDTO.getClientExpediteurId());
+                return new ResponseEntity<>(
+                                colisService.createColis(createDTO),
+                                HttpStatus.CREATED);
+        }
 
-    // ------------------- READ -------------------
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ColisDTO> getColisById(@PathVariable String id) {
-        return ResponseEntity.ok(colisService.getColisById(id));
-    }
+        // ------------------- READ -------------------
+        @GetMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<ColisDTO> getColisById(@PathVariable String id) {
+                return ResponseEntity.ok(colisService.getColisById(id));
+        }
 
-    @GetMapping
-    public ResponseEntity<Page<ColisDTO>> getAllColis(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        @GetMapping
+        public ResponseEntity<Page<ColisDTO>> getAllColis(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(colisService.getAllColis(pageable));
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(colisService.getAllColis(pageable));
+        }
 
-    // ------------------- UPDATE -------------------
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ColisDTO> updateColis(
-            @PathVariable String id,
-            @Valid @RequestBody ColisDTO colisDTO) {
+        // ------------------- UPDATE -------------------
+        @PutMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<ColisDTO> updateColis(
+                        @PathVariable String id,
+                        @Valid @RequestBody ColisDTO colisDTO) {
 
-        return ResponseEntity.ok(colisService.updateColis(id, colisDTO));
-    }
+                return ResponseEntity.ok(colisService.updateColis(id, colisDTO));
+        }
 
-    // ------------------- DELETE -------------------
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteColis(@PathVariable String id) {
-        colisService.deleteColis(id);
-        return ResponseEntity.noContent().build();
-    }
+        // ------------------- DELETE -------------------
+        @DeleteMapping("/{id}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Void> deleteColis(@PathVariable String id) {
+                colisService.deleteColis(id);
+                return ResponseEntity.noContent().build();
+        }
 
-    // ------------------- ASSIGNER LIVREUR -------------------
-    @PostMapping("/{colisId}/assigner-livreur/{livreurId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ColisDTO> assignerLivreur(
-            @PathVariable String colisId,
-            @PathVariable String livreurId) {
+        // ------------------- ASSIGNER LIVREUR -------------------
+        @PostMapping("/{colisId}/assigner-livreur/{livreurId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<ColisDTO> assignerLivreur(
+                        @PathVariable String colisId,
+                        @PathVariable String livreurId) {
 
-        return ResponseEntity.ok(
-                colisService.assignerLivreur(colisId, livreurId)
-        );
-    }
+                return ResponseEntity.ok(
+                                colisService.assignerLivreur(colisId, livreurId));
+        }
 
-    // ------------------- COLIS DU LIVREUR CONNECTÉ -------------------
-    @PreAuthorize("hasRole('LIVREUR')")
-    @GetMapping("/livreur/me")
-    public ResponseEntity<Page<ColisDTO>> getMyColis(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            Authentication authentication) {
+        // ------------------- COLIS DU LIVREUR CONNECTÉ -------------------
+        @PreAuthorize("hasRole('LIVREUR')")
+        @GetMapping("/livreur/me")
+        public ResponseEntity<Page<ColisDTO>> getMyColis(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        Authentication authentication) {
 
-        String email = authentication.getName();
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                colisService.getColisByLivreurEmail(email, pageable)
-        );
-    }
+                String email = authentication.getName();
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByLivreurEmail(email, pageable));
+        }
 
-    // ------------------- UPDATE STATUT -------------------
-    @PreAuthorize("hasRole('LIVREUR')")
-    @PostMapping("/{colisId}/statut")
-    public ResponseEntity<ColisDTO> updateStatut(
-            @PathVariable String colisId,
-            @RequestParam StatutColis statut,
-            @RequestParam(required = false) String commentaire,
-            Authentication authentication) throws AccessDeniedException {
+        // ------------------- COLIS DU CLIENT CONNECTÉ -------------------
+        @PreAuthorize("hasRole('CLIENT')")
+        @GetMapping("/client/me")
+        public ResponseEntity<Page<ColisDTO>> getMyClientColis(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        Authentication authentication) {
 
-        return ResponseEntity.ok(
-                colisService.updateStatutByLivreur(
-                        colisId,
-                        statut,
-                        commentaire,
-                        authentication.getName()
-                )
-        );
-    }
+                String email = authentication.getName();
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByClientEmail(email, pageable));
+        }
 
-    // ------------------- SEARCH -------------------
-    @PostMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ColisDTO>> searchColis(
-            @RequestBody ColisSearchCriteria criteria,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        // ------------------- COLIS DU DESTINATAIRE CONNECTÉ -------------------
+        @PreAuthorize("hasRole('DESTINATAIRE')")
+        @GetMapping("/destinataire/me")
+        public ResponseEntity<Page<ColisDTO>> getMyDestinataireColis(
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size,
+                        Authentication authentication) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(colisService.searchColis(criteria, pageable));
-    }
+                String email = authentication.getName();
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByDestinataireEmail(email, pageable));
+        }
 
-    // ------------------- STATISTIQUES -------------------
-    @GetMapping("/stats/livreur/{livreurId}")
-    @PreAuthorize("hasRole('LIVREUR')")
-    public ResponseEntity<ColisStatisticsDTO> statsByLivreur(
-            @PathVariable String livreurId) {
+        // ------------------- UPDATE STATUT -------------------
+        @PreAuthorize("hasRole('LIVREUR')")
+        @PostMapping("/{colisId}/statut")
+        public ResponseEntity<ColisDTO> updateStatut(
+                        @PathVariable String colisId,
+                        @RequestParam StatutColis statut,
+                        @RequestParam(required = false) String commentaire,
+                        Authentication authentication) throws AccessDeniedException {
 
-        return ResponseEntity.ok(
-                colisService.getStatisticsByLivreur(livreurId)
-        );
-    }
+                return ResponseEntity.ok(
+                                colisService.updateStatutByLivreur(
+                                                colisId,
+                                                statut,
+                                                commentaire,
+                                                authentication.getName()));
+        }
 
-    @GetMapping("/stats/zone/{zoneId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ColisStatisticsDTO> statsByZone(
-            @PathVariable String zoneId) {
+        // ------------------- SEARCH -------------------
+        @PostMapping("/search")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<ColisDTO>> searchColis(
+                        @RequestBody ColisSearchCriteria criteria,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        return ResponseEntity.ok(
-                colisService.getStatisticsByZone(zoneId)
-        );
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(colisService.searchColis(criteria, pageable));
+        }
 
-    // ------------------- RETARD -------------------
-    @GetMapping("/retard")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ColisDTO>> getColisEnRetard() {
-        return ResponseEntity.ok(colisService.getColisEnRetard());
-    }
+        // ------------------- STATISTIQUES -------------------
+        @GetMapping("/stats/livreur/{livreurId}")
+        @PreAuthorize("hasRole('LIVREUR')")
+        public ResponseEntity<ColisStatisticsDTO> statsByLivreur(
+                        @PathVariable String livreurId) {
 
-    // ------------------- PRIORITAIRES NON ASSIGNÉS -------------------
-    @GetMapping("/prioritaires/non-assignes")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ColisDTO>> getColisPrioritairesNonAssignes() {
-        return ResponseEntity.ok(
-                colisService.getColisPrioritairesNonAssignes()
-        );
-    }
+                return ResponseEntity.ok(
+                                colisService.getStatisticsByLivreur(livreurId));
+        }
 
-    // ------------------- FILTRES -------------------
-    @GetMapping("/livreur/{livreurId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ColisDTO>> getColisByLivreur(
-            @PathVariable String livreurId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        @GetMapping("/stats/zone/{zoneId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<ColisStatisticsDTO> statsByZone(
+                        @PathVariable String zoneId) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                colisService.getColisByLivreur(livreurId, pageable)
-        );
-    }
+                return ResponseEntity.ok(
+                                colisService.getStatisticsByZone(zoneId));
+        }
 
-    @GetMapping("/client/{clientId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ColisDTO>> getColisByClient(
-            @PathVariable String clientId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        // ------------------- RETARD -------------------
+        @GetMapping("/retard")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<List<ColisDTO>> getColisEnRetard() {
+                return ResponseEntity.ok(colisService.getColisEnRetard());
+        }
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                colisService.getColisByClient(clientId, pageable)
-        );
-    }
+        // ------------------- PRIORITAIRES NON ASSIGNÉS -------------------
+        @GetMapping("/prioritaires/non-assignes")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<List<ColisDTO>> getColisPrioritairesNonAssignes() {
+                return ResponseEntity.ok(
+                                colisService.getColisPrioritairesNonAssignes());
+        }
 
-    @GetMapping("/destinataire/{destinataireId}")
-    @PreAuthorize("hasRole('DESTINATAIRE')")
-    public ResponseEntity<List<ColisDTO>> getColisByDestinataire(
-            @PathVariable String destinataireId) {
+        // ------------------- FILTRES -------------------
+        @GetMapping("/livreur/{livreurId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<ColisDTO>> getColisByLivreur(
+                        @PathVariable String livreurId,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        return ResponseEntity.ok(
-                colisService.getColisByDestinataire(destinataireId)
-        );
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByLivreur(livreurId, pageable));
+        }
 
-    // ------------------- HISTORIQUE -------------------
-    @GetMapping("/{colisId}/historique")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<HistoriqueLivraisonDTO>> getHistorique(
-            @PathVariable String colisId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        @GetMapping("/client/{clientId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<ColisDTO>> getColisByClient(
+                        @PathVariable String clientId,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                colisService.getHistorique(colisId, pageable)
-        );
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByClient(clientId, pageable));
+        }
 
-    // ------------------- PAR STATUT / PRIORITÉ / ZONE -------------------
-    @GetMapping("/statut/{statut}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ColisDTO>> getColisByStatut(
-            @PathVariable StatutColis statut,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        @GetMapping("/destinataire/{destinataireId}")
+        @PreAuthorize("hasRole('DESTINATAIRE')")
+        public ResponseEntity<List<ColisDTO>> getColisByDestinataire(
+                        @PathVariable String destinataireId) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                colisService.getColisByStatut(statut, pageable)
-        );
-    }
+                return ResponseEntity.ok(
+                                colisService.getColisByDestinataire(destinataireId));
+        }
 
-    @GetMapping("/priorite/{priorite}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ColisDTO>> getColisByPriorite(
-            @PathVariable String priorite,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        // ------------------- HISTORIQUE -------------------
+        @GetMapping("/{colisId}/historique")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<HistoriqueLivraisonDTO>> getHistorique(
+                        @PathVariable String colisId,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        PrioriteColis p = PrioriteColis.valueOf(priorite.toUpperCase());
-        return ResponseEntity.ok(
-                colisService.getColisByPriorite(p, pageable)
-        );
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getHistorique(colisId, pageable));
+        }
 
-    @GetMapping("/zone/{zoneId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ColisDTO>> getColisByZone(
-            @PathVariable String zoneId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        // ------------------- PAR STATUT / PRIORITÉ / ZONE -------------------
+        @GetMapping("/statut/{statut}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<ColisDTO>> getColisByStatut(
+                        @PathVariable StatutColis statut,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                colisService.getColisByZone(zoneId, pageable)
-        );
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByStatut(statut, pageable));
+        }
 
-    @GetMapping("/ville/{ville}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ColisDTO>> getColisByVille(
-            @PathVariable String ville,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+        @GetMapping("/priorite/{priorite}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<ColisDTO>> getColisByPriorite(
+                        @PathVariable String priorite,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(
-                colisService.getColisByVille(ville, pageable)
-        );
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                PrioriteColis p = PrioriteColis.valueOf(priorite.toUpperCase());
+                return ResponseEntity.ok(
+                                colisService.getColisByPriorite(p, pageable));
+        }
 
-    // ------------------- STATS GLOBALES -------------------
-    @GetMapping("/stats/statut")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Object[]>> countByStatutGroupBy() {
-        return ResponseEntity.ok(colisService.countByStatutGroupBy());
-    }
+        @GetMapping("/zone/{zoneId}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<ColisDTO>> getColisByZone(
+                        @PathVariable String zoneId,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
 
-    @GetMapping("/stats/zones")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Object[]>> countByZoneGroupBy() {
-        return ResponseEntity.ok(colisService.countByZoneGroupBy());
-    }
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByZone(zoneId, pageable));
+        }
 
-    @GetMapping("/stats/priorite")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Object[]>> countByPrioriteGroupBy() {
-        return ResponseEntity.ok(colisService.countByPrioriteGroupBy());
-    }
+        @GetMapping("/ville/{ville}")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<ColisDTO>> getColisByVille(
+                        @PathVariable String ville,
+                        @RequestParam(defaultValue = "0") int page,
+                        @RequestParam(defaultValue = "10") int size) {
+
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(
+                                colisService.getColisByVille(ville, pageable));
+        }
+
+        // ------------------- STATS GLOBALES -------------------
+        @GetMapping("/stats/statut")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<List<Object[]>> countByStatutGroupBy() {
+                return ResponseEntity.ok(colisService.countByStatutGroupBy());
+        }
+
+        @GetMapping("/stats/zones")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<List<Object[]>> countByZoneGroupBy() {
+                return ResponseEntity.ok(colisService.countByZoneGroupBy());
+        }
+
+        @GetMapping("/stats/priorite")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<List<Object[]>> countByPrioriteGroupBy() {
+                return ResponseEntity.ok(colisService.countByPrioriteGroupBy());
+        }
 }

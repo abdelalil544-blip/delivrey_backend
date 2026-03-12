@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -43,6 +42,15 @@ public class ClientExpediteurServiceImpl implements ClientExpediteurService {
 
     @Override
     @Transactional(readOnly = true)
+    public ClientExpediteurDTO getByEmail(String email) {
+        log.debug("Récupération du client par email: {}", email);
+        ClientExpediteur entity = repository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Client introuvable avec l'email: " + email));
+        return mapper.toDto(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<ClientExpediteurDTO> getAll(Pageable pageable) {
         return repository.findAll(pageable).map(mapper::toDto);
     }
@@ -58,6 +66,7 @@ public class ClientExpediteurServiceImpl implements ClientExpediteurService {
         existing.setEmail(dto.getEmail());
         existing.setTelephone(dto.getTelephone());
         existing.setAdresse(dto.getAdresse());
+        existing.setEntreprise(dto.getEntreprise());
 
         ClientExpediteur updated = repository.save(existing);
         log.info("Client mis à jour avec succès, ID: {}", updated.getId());
@@ -80,8 +89,8 @@ public class ClientExpediteurServiceImpl implements ClientExpediteurService {
         log.debug("Recherche paginée de clients avec le mot-clé: {}", keyword);
 
         // Recherche par nom ou prénom
-        Page<ClientExpediteur> pageResult =
-                repository.findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(keyword, keyword, pageable);
+        Page<ClientExpediteur> pageResult = repository
+                .findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCase(keyword, keyword, pageable);
 
         // Si aucun résultat, on tente la recherche par téléphone
         if (pageResult.isEmpty()) {

@@ -53,7 +53,7 @@ public class HistoriqueLivraisonServiceImpl implements HistoriqueLivraisonServic
 
     @Override
     @Transactional(readOnly = true)
-    public Page<HistoriqueLivraison> findAll(Pageable  pageable) {
+    public Page<HistoriqueLivraison> findAll(Pageable pageable) {
         log.debug("Récupération de tous les historiques de livraison");
         Page<HistoriqueLivraison> result = historiqueLivraisonRepository.findAll(pageable);
         log.info("Nombre total d'historiques de livraison récupérés: {}", result.getTotalElements());
@@ -65,7 +65,7 @@ public class HistoriqueLivraisonServiceImpl implements HistoriqueLivraisonServic
     public Page<HistoriqueLivraison> findByColisIdOrderByDateDesc(String colisId, Pageable pageable) {
         log.debug("Recherche de l'historique pour le colis: {}", colisId);
         Page<HistoriqueLivraison> result = historiqueLivraisonRepository
-                .findByColisIdOrderByDateChangementDesc(colisId,  pageable);
+                .findByColisIdOrderByDateChangementDesc(colisId, pageable);
         log.info("Nombre d'entrées d'historique trouvées pour le colis {}: {}", colisId, result.getTotalElements());
         if (!result.isEmpty()) {
             log.debug("Dernier statut du colis {}: {}", colisId, result.getContent().get(0).getStatut());
@@ -80,6 +80,13 @@ public class HistoriqueLivraisonServiceImpl implements HistoriqueLivraisonServic
         Page<HistoriqueLivraison> result = historiqueLivraisonRepository.findByStatut(statut, pageable);
         log.info("Nombre d'historiques trouvés avec le statut '{}': {}", statut, result.getTotalElements());
         return result;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<HistoriqueLivraison> findByClientEmail(String email, Pageable pageable) {
+        log.debug("Recherche des historiques pour le client: {}", email);
+        return historiqueLivraisonRepository.findByColisClientExpediteurEmailOrderByDateChangementDesc(email, pageable);
     }
 
     @Override

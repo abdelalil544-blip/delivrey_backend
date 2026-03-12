@@ -1,5 +1,6 @@
 package com.smart_delivery_management.smartlogi_delivery.OAuth2;
 
+import com.smart_delivery_management.smartlogi_delivery.entity.ClientExpediteur;
 import com.smart_delivery_management.smartlogi_delivery.entity.User;
 import com.smart_delivery_management.smartlogi_delivery.entity.enums.Role;
 import com.smart_delivery_management.smartlogi_delivery.repository.UserRepository;
@@ -31,8 +32,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(
             HttpServletRequest request,
             HttpServletResponse response,
-            Authentication authentication
-    ) throws IOException {
+            Authentication authentication) throws IOException {
 
         OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
 
@@ -47,9 +47,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         User user = userRepository.findByEmail(finalEmail)
                 .orElseGet(() -> {
-                    User u = new User();
+                    ClientExpediteur u = new ClientExpediteur();
                     u.setId(UUID.randomUUID().toString());
                     u.setEmail(finalEmail);
+                    u.setNom(oauth2User.getAttribute("family_name") != null ? oauth2User.getAttribute("family_name")
+                            : "User");
+                    u.setPrenom(oauth2User.getAttribute("given_name") != null ? oauth2User.getAttribute("given_name")
+                            : "OAuth");
                     u.setRole(Role.CLIENT);
                     return userRepository.save(u);
                 });
@@ -59,9 +63,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write("""
-            {
-              "token": "%s"
-            }
-        """.formatted(token));
+                    {
+                      "token": "%s"
+                    }
+                """.formatted(token));
     }
 }

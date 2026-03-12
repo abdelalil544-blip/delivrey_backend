@@ -54,7 +54,7 @@ public class DestinataireController {
     // ------------------- READ ALL (Pagination) -------------------
     @Operation(summary = "Récupérer tous les destinataires avec pagination")
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CLIENT')")
     public ResponseEntity<Page<Destinataire>> getAllDestinataires(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -75,8 +75,7 @@ public class DestinataireController {
 
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(
-                destinataireService.searchByNomOrPrenom(nom, prenom, pageable)
-        );
+                destinataireService.searchByNomOrPrenom(nom, prenom, pageable));
     }
 
     // ------------------- SEARCH PAR TÉLÉPHONE -------------------
@@ -90,8 +89,7 @@ public class DestinataireController {
 
         Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(
-                destinataireService.findByTelephone(telephone, pageable)
-        );
+                destinataireService.findByTelephone(telephone, pageable));
     }
 
     // ------------------- DELETE -------------------

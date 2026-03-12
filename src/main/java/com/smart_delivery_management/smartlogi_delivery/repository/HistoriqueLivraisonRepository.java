@@ -10,5 +10,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface HistoriqueLivraisonRepository extends JpaRepository<HistoriqueLivraison, String> {
     Page<HistoriqueLivraison> findByColisIdOrderByDateChangementDesc(String colisId, Pageable pageable);
+
     Page<HistoriqueLivraison> findByStatut(StatutColis statut, Pageable pageable);
+
+    Page<HistoriqueLivraison> findByColisClientExpediteurEmailOrderByDateChangementDesc(String email,
+            Pageable pageable);
 }
